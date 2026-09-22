@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>/visualize Canvas</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    // Initialize Mermaid with dynamic theme support
+    function getMermaidTheme() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      return theme === 'dark' ? 'dark' : 'default';
+    }
+
+    function getMermaidThemeVariables() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      if (theme === 'dark') {
+        // Dark-technical theme: deep blues, grays, sharp contrast
+        return {
+          primaryColor: '#1e2d42',
+          primaryBorderColor: '#2d3e52',
+          primaryTextColor: '#e0e6ed',
+          primaryBorderColor: '#3a4d61',
+          lineColor: '#4a5d75',
+          secondaryColor: '#2d4a6f',
+          tertiaryColor: '#1a2a3d',
+          background: '#0f1419',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace',
+          fontSize: '14px'
+        };
+      } else {
+        // Light-editorial theme: warm whites, clean grays, soft contrast
+        return {
+          primaryColor: '#f8f9fb',
+          primaryBorderColor: '#d4dce5',
+          primaryTextColor: '#2c3e50',
+          lineColor: '#95a8c0',
+          secondaryColor: '#e8f0f8',
+          tertiaryColor: '#f5f8fb',
+          background: '#ffffff',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontSize: '14px'
+        };
+      }
+    }
+
+    if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({ 
+        startOnLoad: false, 
+        securityLevel: 'loose',
+        theme: getMermaidTheme(),
+        themeVariables: getMermaidThemeVariables()
+      });
+    }
+  </script>
+  <style>
+    :root {
+      /* Light theme (editorial) */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fb;
+      --bg-tertiary: #f0f2f5;
+      --text-primary: #2c3e50;
+      --text-secondary: #555;
+      --text-tertiary: #999;
+      --border-color: #d4dce5;
+      --border-light: #e8eef6;
+      --accent-error: #ffc107;
+      --accent-error-bg: #fff3cd;
+      --accent-error-text: #856404;
+      --card-shadow: rgba(0, 0, 0, 0.08);
+      --divider: #e0e6ed;
+      --mermaid-bg: #ffffff;
+    }
+
+    html[data-theme="dark"] {
+      /* Dark theme (technical) */
+      --bg-primary: #0f1419;
+      --bg-secondary: #161d28;
+      --bg-tertiary: #1a2231;
+      --text-primary: #e0e6ed;
+      --text-secondary: #a5b3c5;
+      --text-tertiary: #6b7d95;
+      --border-color: #2d3e52;
+      --border-light: #1e2d42;
+      --accent-error: #ff9800;
+      --accent-error-bg: #3e2c1a;
+      --accent-error-text: #ffb74d;
+      --card-shadow: rgba(0, 0, 0, 0.3);
+      --divider: #2a3a4d;
+      --mermaid-bg: #161d28;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 20px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 800px;
+      margin: 0 auto 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--text-secondary);
+    }
+
+    .theme-toggle-icon {
+      font-size: 16px;
+    }
+
+    #panels-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px var(--card-shadow);
+      transition: all 0.2s ease;
+    }
+
+    .panel:hover {
+      border-color: var(--border-light);
+      box-shadow: 0 4px 12px var(--card-shadow);
+    }
+
+    .panel-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      line-height: 1.3;
+    }
+
+    .panel-prose {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .panel-diagram {
+      background: var(--mermaid-bg);
+      border: 1px solid var(--border-light);
+      padding: 20px;
+      border-radius: 6px;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: auto;
+    }
+
+    .panel-diagram.mermaid {
+      background: var(--mermaid-bg);
+      border: 1px solid var(--divider);
+    }
+
+    .panel-diagram svg {
+      max-width: 100%;
+    }
+
+    .panel-error {
+      background: var(--accent-error-bg);
+      border: 1px solid var(--accent-error);
+      color: var(--accent-error-text);
+      padding: 14px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .panel-error strong {
+      font-weight: 600;
+    }
+
+    .panel-error-code {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
+    }
+
+    #status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      background: var(--bg-secondary);
+      padding: 8px 12px;
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-tertiary);
+      padding: 60px 20px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Smooth transitions for theme changes */
+    html {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>/visualize</h1>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </header>
+
+  <div id="panels-container">
+    <div class="empty-state">Waiting for visualizations...</div>
+  </div>
+  <div id="status">Ready</div>
+
+  <script>
+    // ===== THEME MANAGEMENT =====
+    function initTheme() {
+      const saved = localStorage.getItem('visualize-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      setTheme(theme, false); // false = no animation on init
+    }
+
+    function setTheme(theme, animate = true) {
+      const html = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      const label = document.getElementById('theme-label');
+      const isDark = theme === 'dark';
+
+      html.setAttribute('data-theme', theme);
+      localStorage.setItem('visualize-theme', theme);
+      icon.textContent = isDark ? '☀️' : '🌙';
+      label.textContent = isDark ? 'Light' : 'Dark';
+
+      // Update Mermaid theme dynamically
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'loose',
+          theme: isDark ? 'dark' : 'default',
+          themeVariables: getMermaidThemeVariables()
+        });
+      }
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      setTheme(next, true);
+    });
+
+    // Initialize theme on page load
+    initTheme();
+
+    // ===== PANEL MANAGEMENT =====
+    let lastSeenCount = 0;
+    const container = document.getElementById('panels-container');
+    const statusEl = document.getElementById('status');
+
+    async function poll() {
+      try {
+        const res = await fetch('/panels');
+        const data = await res.json();
+        const { panels } = data;
+
+        if (panels.length > lastSeenCount) {
+          // New panels arrived
+          if (lastSeenCount === 0 && panels.length > 0) {
+            // First time: clear empty state
+            container.innerHTML = '';
+          }
+
+          // Render only new panels
+          for (let i = lastSeenCount; i < panels.length; i++) {
+            const panel = panels[i];
+            const panelEl = document.createElement('div');
+            panelEl.className = 'panel';
+            panelEl.innerHTML = `
+              <div class="panel-title">${escapeHtml(panel.title || 'Untitled')}</div>
+              <div class="panel-prose">${escapeHtml(panel.prose || '')}</div>
+              <div id="diagram-${panel.id}" class="panel-diagram"></div>
+            `;
+            container.appendChild(panelEl);
+            
+            // Render diagram immediately after adding to DOM
+            const diagramEl = panelEl.querySelector(`#diagram-${panel.id}`);
+            if (panel.mermaid && panel.mermaid.trim()) {
+              renderDiagram(diagramEl, panel.mermaid, panel.id);
+            } else {
+              diagramEl.innerHTML = '<span style="color: #999; font-size: 13px;">No diagram provided</span>';
+            }
+          }
+
+          lastSeenCount = panels.length;
+          // Auto-scroll to newest
+          window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        statusEl.textContent = `Ready (${panels.length} panel${panels.length !== 1 ? 's' : ''})`;
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    // Wait for Mermaid to be ready before polling
+    if (typeof window.mermaid !== 'undefined') {
+      console.log('[visualize] Mermaid object found:', window.mermaid);
+      if (typeof window.mermaid.render === 'function') {
+        console.log('[visualize] Mermaid.render is available');
+      } else {
+        console.error('[visualize] Mermaid.render is NOT available');
+      }
+    } else {
+      console.error('[visualize] Mermaid failed to load from CDN');
+    }
+    
+    // Poll every 1s
+    setInterval(poll, 1000);
+    poll(); // Initial
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function renderDiagram(container, mermaidCode, panelId) {
+      try {
+        // IMPORTANT: use a throwaway id DIFFERENT from our container's own id.
+        // mermaid.render() creates a temporary hidden element with this id
+        // internally, renders into it, then REMOVES it as cleanup. If we reuse
+        // our real container's id here, mermaid hijacks/deletes our element.
+        const renderId = `mermaid-render-${panelId}`;
+        
+        // Use mermaid.render() to convert code -> SVG string
+        const { svg } = await mermaid.render(renderId, mermaidCode);
+        
+        // Insert the SVG into OUR OWN container (untouched by mermaid)
+        container.innerHTML = svg;
+        container.classList.add('mermaid');
+        // Let CSS variables handle the background
+        container.style.background = '';
+        
+        console.log(`[visualize] Rendered diagram ${panelId} successfully`);
+      } catch (err) {
+        // Render error message + raw code
+        console.error(`[visualize] Diagram ${panelId} failed:`, err);
+        const errorHtml = `
+          <div class="panel-error">
+            <strong>Diagram Error:</strong> ${escapeHtml(err.message || String(err))}
+            <div class="panel-error-code">${escapeHtml(mermaidCode)}</div>
+          </div>
+        `;
+        container.innerHTML = errorHtml;
+        container.classList.remove('mermaid');
+      }
+    }
+  </script>
+</body>
+</html>
