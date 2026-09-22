@@ -233,6 +233,106 @@
       overflow-x: auto;
     }
 
+    .card-subtitle {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .card-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .card-stat {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--tone, var(--border-color));
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .card-stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    .card-stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-stat-detail {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-left: 6px;
+      font-weight: 500;
+    }
+
+    .card-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border-light);
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .card-bar span {
+      display: block;
+      height: 100%;
+      background: var(--tone, var(--text-tertiary));
+    }
+
+    .card-section {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--divider);
+    }
+
+    .card-section-heading {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-tertiary);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .card-item {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+
+    .card-item-marker {
+      flex: none;
+      width: 16px;
+      text-align: center;
+    }
+
+    .card-item-meta {
+      display: block;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 2px;
+    }
+
+    .card-updated {
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
     #status {
       position: fixed;
       bottom: 20px;
@@ -337,19 +437,24 @@
             const panel = panels[i];
             const panelEl = document.createElement('div');
             panelEl.className = 'panel';
-            panelEl.innerHTML = `
-              <div class="panel-title">${escapeHtml(panel.title || 'Untitled')}</div>
-              <div class="panel-prose">${escapeHtml(panel.prose || '')}</div>
-              <div id="diagram-${panel.id}" class="panel-diagram"></div>
-            `;
-            container.appendChild(panelEl);
-            
-            // Render diagram immediately after adding to DOM
-            const diagramEl = panelEl.querySelector(`#diagram-${panel.id}`);
-            if (panel.mermaid && panel.mermaid.trim()) {
-              renderDiagram(diagramEl, panel.mermaid, panel.id);
+            if (panel.card) {
+              panelEl.innerHTML = renderCard(panel.card, panel.title);
+              container.appendChild(panelEl);
             } else {
-              diagramEl.innerHTML = '<span style="color: #999; font-size: 13px;">No diagram provided</span>';
+              panelEl.innerHTML = `
+                <div class="panel-title">${escapeHtml(panel.title || 'Untitled')}</div>
+                <div class="panel-prose">${escapeHtml(panel.prose || '')}</div>
+                <div id="diagram-${panel.id}" class="panel-diagram"></div>
+              `;
+              container.appendChild(panelEl);
+
+              // Render diagram immediately after adding to DOM
+              const diagramEl = panelEl.querySelector(`#diagram-${panel.id}`);
+              if (panel.mermaid && panel.mermaid.trim()) {
+                renderDiagram(diagramEl, panel.mermaid, panel.id);
+              } else {
+                diagramEl.innerHTML = '<span style="color: #999; font-size: 13px;">No diagram provided</span>';
+              }
             }
           }
 
@@ -379,6 +484,55 @@
     // Poll every 1s
     setInterval(poll, 1000);
     poll(); // Initial
+
+    const TONE_COLORS = {
+      ok: '#4caf50',
+      bad: '#f44336',
+      warn: '#ff9800',
+      info: '#2196f3',
+      neutral: 'var(--border-color)'
+    };
+
+    const ITEM_MARKERS = { done: '\u2713', todo: '\u25cb', bad: '\u26a0', warn: '?' };
+
+    function renderCard(card, fallbackTitle) {
+      const stats = (card.stats || []).map(s => {
+        const tone = TONE_COLORS[s.tone] || TONE_COLORS.neutral;
+        const detail = s.detail ? `<span class="card-stat-detail">${escapeHtml(s.detail)}</span>` : '';
+        const bar = typeof s.progress === 'number'
+          ? `<div class="card-bar"><span style="width:${Math.max(0, Math.min(100, s.progress))}%"></span></div>`
+          : '';
+        return `<div class="card-stat" style="--tone:${tone}">
+          <div class="card-stat-label">${escapeHtml(s.label || '')}</div>
+          <div class="card-stat-value">${escapeHtml(s.value || '')}${detail}</div>
+          ${bar}
+        </div>`;
+      }).join('');
+
+      const sections = (card.sections || []).map(sec => {
+        const items = (sec.items || []).map(it => {
+          const marker = ITEM_MARKERS[it.state] || '\u2022';
+          const meta = it.meta ? `<span class="card-item-meta">${escapeHtml(it.meta)}</span>` : '';
+          return `<div class="card-item">
+            <span class="card-item-marker">${marker}</span>
+            <span>${meta}${escapeHtml(it.text || '')}</span>
+          </div>`;
+        }).join('');
+        return `<div class="card-section">
+          <div class="card-section-heading">${escapeHtml(sec.heading || '')}</div>
+          ${items}
+        </div>`;
+      }).join('');
+
+      const subtitle = card.subtitle ? `<div class="card-subtitle">${escapeHtml(card.subtitle)}</div>` : '';
+      const updated = card.updated ? `<div class="card-updated">Updated ${escapeHtml(card.updated)}</div>` : '';
+      const error = card.error ? `<div class="panel-error"><strong>Error:</strong> ${escapeHtml(card.error)}</div>` : '';
+
+      return `<div class="panel-title">${escapeHtml(card.title || fallbackTitle || 'Untitled')}</div>
+        ${subtitle}${error}
+        <div class="card-stats">${stats}</div>
+        ${sections}${updated}`;
+    }
 
     function escapeHtml(text) {
       const div = document.createElement('div');
